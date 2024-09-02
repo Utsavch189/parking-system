@@ -1,0 +1,95 @@
+{% extends 'base.html' %} {% block title %}
+Reset Password
+{% endblock title %}
+
+{% block body %}
+
+<!-- OTP Section -->
+<div id="last-step" class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 hidden">
+    <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+        <!-- <img class="mx-auto h-10 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+            alt="Your Company"> -->
+        <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Verify Your OTP
+        </h2>
+    </div>
+
+    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+        <div class="space-y-6" method="post">
+            <div>
+                <label for="otps" class="block text-sm font-medium leading-6 text-gray-900">Your OTP</label>
+                <div class="mt-2">
+                    <input id="otp" name="otps" type="text" required
+                        class="block p-2 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                </div>
+            </div>
+
+            <div>
+                <button onclick="verify()" type="button" id="otp_send"
+                    class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Verify
+                    OTP</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Email Put section -->
+<div id="first-step" class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+
+    <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+        <!-- <img class="mx-auto h-10 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+            alt="Your Company"> -->
+        <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Reset Your Password
+        </h2>
+    </div>
+
+    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+        <div class="space-y-6" method="post">
+            <div>
+                <label for="emails" class="block text-sm font-medium leading-6 text-gray-900">Your Registered
+                    Email</label>
+                <div class="mt-2">
+                    <input id="email" name="emails" type="email" autocomplete="email" required
+                        class="block p-2 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                </div>
+            </div>
+
+            <div>
+                <label for="new_passwords" class="block text-sm font-medium leading-6 text-gray-900">New Password</label>
+                <div class="mt-2">
+                    <input id="new_password" name="new_passwords" type="password" required
+                        class="block p-2 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                </div>
+            </div>
+
+            <div>
+                <label for="confirm_new_passwords" class="block text-sm font-medium leading-6 text-gray-900">Confirm New
+                    Password</label>
+                <div class="mt-2">
+                    <input id="confirm_new_password" name="confirm_new_passwords" type="password" required
+                        class="block p-2 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                </div>
+            </div>
+
+            <!-- Dropdown menu -->
+            <div class="mb-3">
+                <select id="roles"
+                    class="block p-2 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                    <option value="" selected>Choose your role</option>
+                    {% for role in roles %}
+                        {% if role.ui_name %}
+                            <option value={{role.role_name}}>{{role.ui_name}}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <button onclick="otp_send()" type="button" id="otp_send"
+                    class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Send
+                    OTP</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/static/js/auth_js/reset_password.js"></script>
+{% endblock body %}

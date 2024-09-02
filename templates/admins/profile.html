@@ -1,0 +1,42 @@
+{% extends 'base.html' %} {% block title %}
+Admin Profile
+{% endblock title %}
+
+{% block body %}
+{% include 'admins/navbar.html' %}
+
+<div class="p-6">
+    <div class="p-8 bg-white shadow mt-24">
+        <div class="flex flex-col items-center">
+            <!-- Profile Picture -->
+            <div class="relative">
+                <div class="w-48 h-48 bg-indigo-100 mx-auto rounded-full shadow-2xl flex items-center justify-center text-indigo-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Admin Data -->
+            <div class="text-center mt-8">
+                <h1 class="text-4xl font-medium text-gray-700">{{ name }}</h1>
+                <p class="mt-4 text-gray-500">{{ email }}</p>
+                <p class="mt-2 text-gray-500">{{ phone }}</p>
+                <p class="mt-4 text-gray-500">Pincode: {{ pincode }}</p>
+                <p class="font-light text-gray-600 mt-2">Countrycode: {{ country_code }}</p>
+                <p class="mt-2 text-gray-500">Joined At: {{ joined_at }}</p>
+            </div>
+            
+            <!-- Subadmin Register QR -->
+            <div class="mt-8 text-center">
+                <p class="text-lg font-medium text-gray-700">AreaVolentier Register QR</p>
+                <img height="400px" width="400px" class="mx-auto mt-4" src="{{ subadmin_register_qr }}" alt="QR Code" />
+                <div class="flex w-full justify-center items-center">
+                    <a class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" href="https://wa.me/?text={{ subadmin_register_qr }}" target="_blank">Share on WhatsApp</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock body %}

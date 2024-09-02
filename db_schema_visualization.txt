@@ -1,0 +1,4 @@
+python manage.py graph_models -a -o myapp_models.dot
+
+
+dot -Tpdf -Gdpi=300 myapp_models.dot -o /media/utsav/77f97bd8-cb4e-4891-9e00-a700efef6596/downloads/myapp_models_high_quality.pdf
