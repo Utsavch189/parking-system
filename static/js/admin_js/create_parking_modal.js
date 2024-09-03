@@ -241,6 +241,9 @@ function submit_area_name() {
         });
         return;
     }
+    let text=create_facilities_btn.textContent;
+    create_facilities_btn.disabled=true;
+    create_facilities_btn.textContent='Loading...';
     fetch('/admins/parking-area', {
         method: "POST",
         body: JSON.stringify({ "area_name": area_name.value })
@@ -254,6 +257,10 @@ function submit_area_name() {
                 create_open_close_btn.classList.remove("hidden");
                 area = area_name.value;
             }
+        })
+        .finally(()=>{
+            create_facilities_btn.disabled=false;
+            create_facilities_btn.textContent=text;
         })
 }
 
@@ -452,6 +459,10 @@ function create() {
     if(f){
         return;
     }
+    let text=create_btn.textContent;
+    create_btn.disabled=true;
+    create_btn.textContent='Loading...';
+
     fetch('/admins/parking-area', {
         method: "POST",
         body: JSON.stringify({ "facilities": selected_facilities, "area_name": area, "selected_days":_selected_days })
@@ -461,5 +472,9 @@ function create() {
             setTimeout(() => {
                 window.location.reload();
             }, 300)
+        })
+        .finally(()=>{
+            create_btn.disabled=false;
+            create_btn.textContent=text;
         })
 }

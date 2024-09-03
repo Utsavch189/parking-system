@@ -3,68 +3,83 @@ Admin Register
 {% endblock title %}
 
 {% block body %}
+{% include 'dashboard/navbar.html' %}
 
-<section class="bg-gray-50 w-full">
-    <div class="flex flex-col w-full items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-        <!-- <a href="#" class="flex items-center mb-6 text-2xl font-semibold text-gray-900">
-            <img class="w-8 h-8 mr-2" src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/logo.svg" alt="logo">
-            Flowbite    
-        </a> -->
-        <div class="w-full bg-white rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
-            <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
-                <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
-                    Create an account
-                </h1>
-                <form class="space-y-4 md:space-y-6" action="/admins/register" method="post">
-                    {% csrf_token %}
-                    <div>
-                        <label for="name" class="block mb-2 text-sm font-medium text-gray-900">Full Name</label>
-                        <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" placeholder="John Doe" required="">
+<div class="min-h-screen p-6 bg-gray-100 flex items-center justify-center ">
+    <div class="container mx-auto">
+        <div>
+            <h2 class="font-semibold text-xl text-gray-600">Create account</h2>
+            <p class="text-gray-500 mb-6">Create Your First Account</p>
+
+            <div class="bg-white rounded shadow-lg p-4 px-4 md:p-8 mb-6 ">
+                <div class="grid gap-4 gap-y-2 text-sm grid-cols-1 lg:grid-cols-3">
+                    <div class="text-gray-600">
+                        <p class="font-medium text-lg">Personal Details</p>
+                        <p>Please fill out all the fields.</p>
                     </div>
-                    <div>
-                        <label for="email" class="block mb-2 text-sm font-medium text-gray-900">Your email</label>
-                        <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" placeholder="name@company.com" required="">
-                    </div>
-                    <div>
-                        <label for="phone" class="block mb-2 text-sm font-medium text-gray-900">Your phone</label>
-                        <input type="text" name="phone" id="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" placeholder="name@company.com" required="">
-                    </div>
-                    <div>
-                        <label for="password" class="block mb-2 text-sm font-medium text-gray-900">Password</label>
-                        <input type="password" name="password" id="password" placeholder="1234567890" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" required="">
-                    </div>
-                    <div>
-                        <label for="confirm-password" class="block mb-2 text-sm font-medium text-gray-900">Confirm password</label>
-                        <input type="password" name="confirm-password" id="confirm-password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" required="">
-                    </div>
-                    <div>
-                        <label for="pincode" class="block mb-2 text-sm font-medium text-gray-900">Your Pincode</label>
-                        <input type="text" name="pincode" id="pincode" placeholder="712512" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" required="">
-                    </div>
-                    <div>
-                        <label for="countrycode" class="block mb-2 text-sm font-medium text-gray-900">Your Country</label>
-                        <select name="countrycode" id="countrycode" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" required="">
-                            <option value="" disabled selected>Select a country</option>
-                        </select>
-                    </div>
-                    <!-- <div class="flex items-start">
-                        <div class="flex items-center h-5">
-                          <input id="terms" aria-describedby="terms" type="checkbox" class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300" required="">
+
+                    <form onsubmit="return validateForm()" class="w-full" action="/admins/register"
+                        method="post">
+                        {% csrf_token %}
+                        <div class="lg:col-span-2">
+                            <div class="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
+                                <div class="md:col-span-5">
+                                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900">Full Name</label>
+                                    <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" placeholder="John Doe" required="">
+                                </div>
+
+                                <div class="md:col-span-5">
+                                    <label for="email" class="block mb-2 text-sm font-medium text-gray-900">Your email</label>
+                                    <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" placeholder="name@company.com" required="">
+                                </div>
+
+                                <div class="md:col-span-3">
+                                    <label for="phone" class="block mb-2 text-sm font-medium text-gray-900">Your phone</label>
+                                    <input type="text" name="phone" id="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" placeholder="name@company.com" required="">
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label for="password" class="block mb-2 text-sm font-medium text-gray-900">Password</label>
+                                    <input type="password" name="password" id="password" placeholder="1234567890" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" required="">
+                                    <p class="text-red-500 font-bold text-sm" id="password-error"></p>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label for="confirm-password" class="block mb-2 text-sm font-medium text-gray-900">Confirm password</label>
+                                    <input type="password" name="confirm-password" id="confirm-password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" required=""> 
+                                    <p class="text-red-500 font-bold text-sm" id="confirm-password-error"></p>
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-2 my-2">
+                                    <label for="pincode" class="block mb-2 text-sm font-medium text-gray-900">Your Pincode</label>
+                                    <input type="text" name="pincode" id="pincode" placeholder="712512" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" required="">
+                                </div>
+
+                                <div class="md:col-span-1 my-2">
+                                    <label for="countrycode" class="block mb-2 text-sm font-medium text-gray-900">Your Country</label>
+                                    <select name="countrycode" id="countrycode" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block p-2.5" required="">
+                                        <option value="" disabled selected>Select a country</option>
+                                    </select>
+                                </div>
+
+                                <div class="md:col-span-5 text-right my-5">
+                                    <div class="flex flex-col items-start justify-center gap-4">
+                                        <button onclick="return validateForm()" onsubmit="return validateForm()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Register</button>
+                                        <p class="text-sm font-light text-gray-500">
+                                            Already have an account? <a href="/admins/login" class="font-medium text-primary-600 hover:underline">Login here</a>
+                                        </p>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
-                        <div class="ml-3 text-sm">
-                          <label for="terms" class="font-light text-gray-500">I accept the <a class="font-medium text-primary-600 hover:underline" href="#">Terms and Conditions</a></label>
-                        </div>
-                    </div> -->
-                    <button type="submit" class="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Create an account</button>
-                    <p class="text-sm font-light text-gray-500">
-                        Already have an account? <a href="#" class="font-medium text-primary-600 hover:underline">Login here</a>
-                    </p>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-  </section>
-  
+</div>
 
   <script src="/static/js/admin_js/register.js"></script>
 {% endblock body %}

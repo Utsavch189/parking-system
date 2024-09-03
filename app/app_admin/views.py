@@ -54,6 +54,9 @@ class LoginView(View):
             if not admin.is_correct_password(password):
                 return JsonResponse({"message": "Wrong password!","status":400}, status=400)
 
+            if admin.is_suspended:
+                return JsonResponse({"message": "You are suspended right now!","status":400}, status=400)
+
             payload = {"user_id": admin.uid, "role": admin.role.role_name}
             tokens = jwt_builder.get_token(payload)
 
@@ -408,12 +411,12 @@ class RegisterView(View):
         return render(request,'admins/register.html')
     
     def post(self,request):
-        name=request.POST.get('name')
-        email=request.POST.get('email')
-        phone=request.POST.get('phone')
-        password=request.POST.get('password')
-        pincode=request.POST.get('pincode')
-        country=request.POST.get('countrycode')
+        name=StringBuilder(request.POST.get('name')).normalize_spaces().trim_string().build()
+        email=StringBuilder(request.POST.get('email')).normalize_spaces().trim_string().build()
+        phone=StringBuilder(request.POST.get('phone')).normalize_spaces().trim_string().build()
+        password=StringBuilder(request.POST.get('password')).normalize_spaces().trim_string().build()
+        pincode=StringBuilder(request.POST.get('pincode')).normalize_spaces().trim_string().build()
+        country=StringBuilder(request.POST.get('countrycode')).normalize_spaces().trim_string().build()
         country_code=CountryCode.objects.get(country=country).country_code
         admin_id=generate_unique_id()
 

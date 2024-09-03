@@ -16,16 +16,22 @@ export function validatePasswordLength(password, length) {
     return true;
 }
 
-export function login(e,login_url,redirect_url,email_inp,password_inp) {
+export function login(e,login_url,redirect_url,email_inp,password_inp,button) {
     if (e) {
         e.preventDefault()
     }
     const email = email_inp.value;
     const password = password_inp.value;
 
-    const res = validatePasswordLength(password, 5);
+    const res = validatePasswordLength(password, 8);
 
     if (res) {
+        let text="";
+        if(button){
+            text=button.textContent;
+            button.disabled = true;
+            button.textContent = 'Loading...';
+        }
         fetch(login_url, {
             method: "POST",
             body: JSON.stringify({ "email": email, "password": password }),
@@ -39,6 +45,12 @@ export function login(e,login_url,redirect_url,email_inp,password_inp) {
                 }
             })
             .catch(err => console.log(err))
+            .finally(()=>{
+                if(button){
+                    button.disabled=false;
+                    button.textContent=text;
+                }
+            })
     }
 }
 
