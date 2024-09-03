@@ -427,6 +427,8 @@ class RegisterView(View):
         subadmin_register_qr=get_qr(subadmin_register_qr_url)
         subadmin_register_qr_res=CDN.upload(source=subadmin_register_qr,destination=subadmin_register_qr_dest)
 
+        role=Role.objects.get(role_name='ADMIN')
+
         with transaction.atomic():
             admin=Admin(
                 uid=admin_id,
@@ -436,7 +438,7 @@ class RegisterView(View):
                 password=password,
                 pincode=pincode,
                 country_code=country_code,
-                role=Role.objects.get(role_name='ADMIN'),
+                role=role,
                 subadmin_register_qr=subadmin_register_qr_res.get('secure_url')
             )
             admin.save()
@@ -455,7 +457,7 @@ class RegisterView(View):
 
         p=Process(
             target=SendMail.send_email,
-            args=('Registered Successfully!',f'Hello {name} Your Account has been created.\nYour UserId is {email} and Password is {password}.',email)
+            args=('Registered Successfully!',f'Hello {name} Your Account has been created as {role.ui_name}.\nYour UserId is {email} and Password is {password}.',email)
         )
         p.start()
 
@@ -500,6 +502,7 @@ class ProfileView(View):
             "pincode":admin.pincode,
             "country_code":admin.country_code,
             "subadmin_register_qr":admin.subadmin_register_qr,
-            "joined_at":admin.created_at
+            "joined_at":admin.created_at,
+            "role":admin.role
         }
         return render(request,'admins/profile.html',context=context)
