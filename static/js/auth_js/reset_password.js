@@ -5,13 +5,57 @@ const new_password_inp=document.getElementById("new_password");
 const confirm_new_password_inp=document.getElementById("confirm_new_password");
 const roles_dropdown=document.getElementById("roles");
 
+const password_error=document.getElementById('password_error');
+const confirm_password_error=document.getElementById('confirm_password_error');
+
+
 let user_type="";
 let email="";
 let new_password="";
+let confirm_password="";
+
+const password_max_length=8;
+const email_regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+new_password_inp.addEventListener("input",(e)=>{
+    if(e.target.value.length<password_max_length){
+        new_password_inp.style.borderColor="red";
+        password_error.innerText="password must be 8 character long!";
+        new_password=e.target.value;
+    }
+    else if(e.target.value.length>password_max_length){
+        new_password_inp.style.borderColor="blue";
+        password_error.innerText="";
+        e.target.value = e.target.value.slice(0, password_max_length);
+        new_password=e.target.value;
+        return;
+    }
+    else{
+        new_password_inp.style.borderColor="blue";
+        password_error.innerText="";
+        new_password=e.target.value;
+    }
+})
+
+confirm_new_password_inp.addEventListener("input",(e)=>{
+    if (e.target.value.length > password_max_length) {
+        e.target.value = e.target.value.slice(0, password_max_length);
+        confirm_password=e.target.value;
+        return;
+    }
+    if (e.target.value !== new_password) {
+        confirm_new_password_inp.style.borderColor = "red";
+        confirm_password_error.innerText = "Passwords do not match!";
+        confirm_password=e.target.value;
+    } else {
+        confirm_new_password_inp.style.borderColor="blue";
+        confirm_password_error.innerText = "";
+        confirm_password=e.target.value;
+    }
+})
 
 function email_validate(email){
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email)
+    return email_regex.test(email)
 }
 
 function validatePasswordLength(password, length) {
@@ -60,9 +104,9 @@ function otp_send(){
         return
     }
 
-    if(!validatePasswordLength(_new_password,5)){
+    if(!validatePasswordLength(_new_password,password_max_length)){
         $.toast({
-            text: `Password must be 5 character long!`,
+            text: `Password must be ${password_max_length} character long!`,
             showHideTransition: 'slide',
             bgColor: 'red',
             textColor: 'white',

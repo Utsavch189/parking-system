@@ -8,7 +8,7 @@ const edit_parking_modal=document.getElementById("edit-parking-modal");
 const qr_modal=document.getElementById('qr-modal');
 const modal_btn_container = document.getElementById("modal-btn-container");
 
-const pagination_numbers = [2,20, 50, 100, 200]
+const pagination_numbers = [20, 50, 100, 200]
 let selected_pagination_number;
 let page = 1;
 let view_facilities_modal_btn;
