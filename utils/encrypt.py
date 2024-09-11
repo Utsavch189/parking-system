@@ -19,6 +19,7 @@ def decrypt(content:str):
         d=f.decrypt(content.encode())
         return d.decode()
     except Exception as e:
+        print(e)
         raise Exception(str(e))
 
 if __name__=="__main__":

@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from app.models import (Admin,ParkingArea,FacilityChargesForArea,
                         SlotFacility,ParkingAreaOpenCloseTime,
                         EmailVerifyLinkSession,CdnFileManager,CountryCode,
-                        Role)
+                        Role,SubAdmin)
 from utils.jwt_builder import JwtBuilder
 from django.utils import timezone
 from utils.decorators.login_requires import login_required
@@ -20,6 +20,7 @@ from utils.id_generator import generate_unique_id
 from datetime import datetime,timedelta
 from django.core.paginator import Paginator,EmptyPage,PageNotAnInteger
 from app.app_admin.serializers.parking_areas import ParkingAreaSerializer
+from app.app_admin.serializers.sub_admin import SubAdminSerializer
 from utils.emails import SendMail
 from decouple import config
 from multiprocessing import Process
@@ -28,12 +29,12 @@ import random
 from utils.cdn import CDN
 
 CDN=CDN()
+APP_NAME=config('APP_NAME')
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
 
     def get(self,request):
-        print("user in login view",request._user)
         if request._user:
             return redirect('/admins')
         return render(request,'admins/login.html')
@@ -56,8 +57,11 @@ class LoginView(View):
 
             if admin.is_suspended:
                 return JsonResponse({"message": "You are suspended right now!","status":400}, status=400)
+            
+            if not admin.is_verified:
+                return JsonResponse({"message": "You are not verified yet!","status":400}, status=400)
 
-            payload = {"user_id": admin.uid, "role": admin.role.role_name}
+            payload = {"user_id": admin.uid, "role": admin.role.role_name,"sub":admin.name}
             tokens = jwt_builder.get_token(payload)
 
             response = JsonResponse({"message": "Login successful","status":200},status=200)
@@ -71,7 +75,7 @@ class LoginView(View):
             return JsonResponse({"message": "Something is wrong","status":500}, status=500)
 
 
-class HomeView(View):
+class HomePageView(View):
 
     @login_required(login_url="/admins/login")
     def get(self,request):
@@ -322,7 +326,7 @@ class GetParkingAreas(View):
             page=request.GET.get('page')
             page_size=request.GET.get('page-size')
             user_id=request._user.get('user_id')
-            areas=ParkingArea.objects.filter(admin__uid=user_id).order_by('created_at')
+            areas=ParkingArea.objects.filter(admin__uid=user_id).order_by('-created_at')
             total_records=areas.count()
             paginator=Paginator(areas,int(page_size))
 
@@ -398,11 +402,11 @@ class ConfirmDeleteParkingArea(View):
             file.delete()
         context={
             "title":f"Delete Confirmation for Area {parking_area.area_name}",
-            "area_name":parking_area.area_name
+            "name":f"Area {parking_area.area_name}"
         }
         parking_area.is_active=False
         parking_area.save()
-        return render(request,'email_templates/parking_area_delete_confirm.html',context=context)
+        return render(request,'email_templates/delete_confirm.html',context=context)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(View):
@@ -457,17 +461,10 @@ class RegisterView(View):
 
         p=Process(
             target=SendMail.send_email,
-            args=('Registered Successfully!',f'Hello {name} Your Account has been created as {role.ui_name}.\nYour UserId is {email} and Password is {password}.',email)
+            args=('Registered Successfully!',f'Hello {name} Your Account has been created as {role.ui_name}.\nYour UserId is {email} and Password is {password}.\nYour Account will be activated shortly and we will inform you!',email)
         )
         p.start()
-
-        jwt_builder = JwtBuilder()
-        payload = {"user_id": admin.uid, "role": admin.role.role_name}
-        tokens = jwt_builder.get_token(payload)
-        response=redirect('/admins')
-        response.set_cookie('access_token', tokens['access_token'], httponly=True, secure=True)
-        response.set_cookie('refresh_token', tokens['refresh_token'], httponly=True, secure=True)
-        return response
+        return redirect('/admins/login')
 
 class SearchCountry(View):
 
@@ -506,3 +503,173 @@ class ProfileView(View):
             "role":admin.role
         }
         return render(request,'admins/profile.html',context=context)
+
+class ParkingAttendantPage(View):
+
+    @login_required(login_url="/admins/login")
+    def get(self,request):
+        return render(request,'admins/parking_attendant.html')
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GetParkingAttendants(View):
+
+    @login_required(login_url="/admins/login",json_response=True)
+    def get(self,request):
+        try:
+            page=request.GET.get('page')
+            page_size=request.GET.get('page-size')
+            user_id=request._user.get('user_id')
+            attached_subadmins=SubAdmin.objects.filter(associate_admin__uid=user_id).order_by('-created_at')
+            total_records=attached_subadmins.count()
+            paginator=Paginator(attached_subadmins,int(page_size))
+
+            try:
+                attached_subadmin=paginator.page(int(page))
+            except PageNotAnInteger:
+                attached_subadmin=paginator.page(1)
+            except EmptyPage:
+                attached_subadmin=[]
+            attached_subadmins=SubAdminSerializer(attached_subadmin,many=True).data
+            return JsonResponse({"attached_subadmins":attached_subadmins,"total_records":total_records,"status":200},status=200)
+        except Exception as e:
+            print(e)
+            return JsonResponse({"message":"something is wrong!","status":500},status=500)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DeleteParkingAttendant(View):
+
+    @login_required(login_url="/admins/login",json_response=True)
+    def delete(self,request,id):
+        try:
+            user_id=request._user.get('user_id')
+            admin=Admin.objects.get(uid=user_id)
+            parking_attendant=SubAdmin.objects.get(uid=id)
+            delete_link=f"{config('BASE_URL')}/admins/delete-confirm-attendant/{encrypt(user_id)}&{encrypt(parking_attendant.uid)}"
+            subject=f"Hello {admin.name} do you want to delete parking attendant {parking_attendant.name} ?"
+            body=f" Link will be valid for 3 minutes. \n Press the link to delete it ! \n {delete_link}"
+            EmailVerifyLinkSession.objects.create(
+                user_id=user_id,
+                link=delete_link,
+                will_expire_at=datetime.now()+timedelta(minutes=3)
+            )
+            p=Process(
+                target=SendMail.send_email,
+                args=(
+                    subject,
+                    body,
+                    admin.email
+                )
+            )
+            p.start()
+            return JsonResponse({"message":"confirmation link is sent to your email!","status":200},status=200)
+        except Exception as e:
+            print(e)
+            return JsonResponse({"message":"something is wrong!","status":500},status=500)
+
+class ConfirmDeleteParkingAttendant(View):
+
+    def get(self,request,admin_id,attendant_id):
+        delete_link=f"{config('BASE_URL')}/admins/delete-confirm-attendant/{admin_id}&{attendant_id}"
+        admin_id=decrypt(admin_id)
+        attendant_id=decrypt(attendant_id)
+        try:
+            parking_attendant=SubAdmin.objects.get(uid=attendant_id)
+        except ParkingArea.DoesNotExist:
+            return HttpResponse("Not Found")
+        if not EmailVerifyLinkSession.objects.filter(user_id=admin_id,link=delete_link).exists():
+            return HttpResponse("Not Found")
+        link_session=EmailVerifyLinkSession.objects.filter(user_id=admin_id,link=delete_link)[0]
+        if link_session.will_expire_at<timezone.now():
+            link_session.delete()
+            return HttpResponse("Not Found")
+        link_session.delete()
+        context={
+            "title":f"Delete Confirmation for Parking Attendant {parking_attendant.name}",
+            "name":f"Parking Attendant {parking_attendant.name}"
+        }
+        parking_attendant.is_active=False
+        parking_attendant.save()
+        return render(request,'email_templates/delete_confirm.html',context=context)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class VerifyParkingAttendant(View):
+
+    @login_required(login_url="/admins/login",json_response=True)
+    def post(self,request):
+        try:
+            user_id=request._user.get('user_id')
+            data = json.loads(request.body.decode('utf-8'))
+            attendant_id=data.get('attendant_id')
+            try:
+                parking_attendant=SubAdmin.objects.get(uid=attendant_id)
+            except SubAdmin.DoesNotExist:
+                return JsonResponse({"message":"user not found!","status":400},status=400)
+            
+            if parking_attendant.is_verified:
+                message=f"{parking_attendant.name} is now unverified!"
+                email_subject=f"Hello {parking_attendant.name} from {APP_NAME}"
+                email_body=f"{parking_attendant.name} Your Account is now UnVerified!\nFor any information connect with your Area Manager."
+                parking_attendant.is_verified=False
+            else:
+                message=f"{parking_attendant.name} is now verified!"
+                email_subject=f"Hello {parking_attendant.name} from {APP_NAME}"
+                email_body=f"{parking_attendant.name} Your Account is now Verified and you can login!\nFor any information connect with your Area Manager.\nClick the link to login.\n{config('BASE_URL')}/sub-admin/login"
+                parking_attendant.is_verified=True
+            
+            parking_attendant.save()
+            p=Process(
+                target=SendMail.send_email,
+                args=(
+                    email_subject,
+                    email_body,
+                    parking_attendant.email
+                )
+            )
+            p.start()
+
+            return JsonResponse({"message":message,"status":200},status=200)
+        except Exception as e:
+            print(e)
+            return JsonResponse({"message":"something is wrong!","status":500},status=500)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SuspendParkingAttendant(View):
+
+    @login_required(login_url="/admins/login",json_response=True)
+    def post(self,request):
+        try:
+            user_id=request._user.get('user_id')
+            data = json.loads(request.body.decode('utf-8'))
+            attendant_id=data.get('attendant_id')
+            try:
+                parking_attendant=SubAdmin.objects.get(uid=attendant_id)
+            except SubAdmin.DoesNotExist:
+                return JsonResponse({"message":"user not found!","status":400},status=400)
+            
+            if parking_attendant.is_suspended:
+                message=f"{parking_attendant.name} is now unsuspended!"
+                email_subject=f"Hello {parking_attendant.name} from {APP_NAME}"
+                email_body=f"{parking_attendant.name} Your Account is now UnSuspended and you can login!\nFor any information connect with your Area Manager.\nClick the link to login.\n{config('BASE_URL')}/sub-admin/login"
+                parking_attendant.is_verified=False
+            else:
+                message=f"{parking_attendant.name} is now suspended!"
+                email_subject=f"Hello {parking_attendant.name} from {APP_NAME}"
+                email_body=f"{parking_attendant.name} Your Account is now Suspended!\nFor any information connect with your Area Manager."
+                parking_attendant.is_verified=True
+            
+            parking_attendant.save()
+            p=Process(
+                target=SendMail.send_email,
+                args=(
+                    email_subject,
+                    email_body,
+                    parking_attendant.email
+                )
+            )
+            p.start()
+
+            return JsonResponse({"message":message,"status":200},status=200)
+        except Exception as e:
+            print(e)
+            return JsonResponse({"message":"something is wrong!","status":500},status=500)

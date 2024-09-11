@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from utils.otp import OTPSender
 from app.models import Admin,SubAdmin,ParkingOwner,Role
 from django.contrib.auth.hashers import make_password
+from django.http import HttpResponse
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(View):
@@ -21,8 +22,10 @@ class LogoutView(View):
 class ResetPassword(View):
 
     def get(self,request):
-        roles=Role.objects.all()
-        return render(request,"forget_password/index.html",context={"roles":roles})
+        if not request._user:
+            roles=Role.objects.all()
+            return render(request,"forget_password/index.html",context={"roles":roles})
+        return HttpResponse("Not Found")
 
     def post(self,request):
         try:

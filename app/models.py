@@ -60,6 +60,7 @@ class Admin(models.Model):
     role=models.ForeignKey(Role,on_delete=models.SET_NULL,related_name='admin_role',null=True)
     subadmin_register_qr=models.TextField(null=True,blank=True)
     is_active=models.BooleanField(default=True)
+    is_verified=models.BooleanField(default=False)
     is_suspended=models.BooleanField(default=False)
     created_at=models.DateTimeField(default=datetime.now())
 
@@ -87,8 +88,10 @@ class SubAdmin(models.Model):
     password=models.TextField()
     pincode=models.IntegerField(default=0)
     country_code=models.CharField(max_length=30,default="")
+    associate_admin=models.ForeignKey(Admin,on_delete=models.SET_NULL,related_name='sub_admin_associate_admin',null=True)
     role=models.ForeignKey(Role,on_delete=models.SET_NULL,related_name='subadmin_role',null=True)
     is_active=models.BooleanField(default=True)
+    is_verified=models.BooleanField(default=False)
     is_suspended=models.BooleanField(default=False)
     created_at=models.DateTimeField(default=datetime.now())
 
@@ -118,6 +121,7 @@ class ParkingOwner(models.Model):
     country_code=models.CharField(max_length=30,default="")
     role=models.ForeignKey(Role,on_delete=models.SET_NULL,related_name='powner_role',null=True)
     is_active=models.BooleanField(default=True)
+    is_verified=models.BooleanField(default=False)
     is_suspended=models.BooleanField(default=False)
     created_at=models.DateTimeField(default=datetime.now())
 
@@ -200,6 +204,7 @@ class ParkingSlot(models.Model):
     slot_no=models.CharField(max_length=10,unique=True,default="")
     address=models.CharField(max_length=255)
     slot_creator=models.ForeignKey(ParkingOwner,on_delete=models.CASCADE,related_name='slot_creator')
+    slot_booking_qr=models.TextField(null=True,blank=True)
     is_active=models.BooleanField(default=True)
     is_suspended=models.BooleanField(default=False)
     created_at=models.DateTimeField(default=datetime.now())
