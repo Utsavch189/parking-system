@@ -8,6 +8,7 @@ from utils.otp import OTPSender
 from app.models import Admin,SubAdmin,ParkingOwner,Role
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
+from .service import reset_password
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(View):
@@ -28,83 +29,18 @@ class ResetPassword(View):
         return HttpResponse("Not Found")
 
     def post(self,request):
-        try:
-            data = json.loads(request.body.decode('utf-8'))
-            email=data.get("email",None)
-            new_password=data.get("new_password",None)
-            confirm_new_password=data.get("confirm_new_password",None)
-            user_type=data.get('user_type',None)
-            otp=data.get("otp",None)
-            
-            if otp and email and new_password and user_type:
-            
-                status,message=OTPSender.verify(
-                    email,
-                    int(otp)
-                )
-
-                if not status:
-                    return JsonResponse({"message":message,"status":400},status=400)
-                
-                if user_type.upper()=='ADMIN':
-                    try:
-                        user=Admin.objects.get(email=email)
-                    except Admin.DoesNotExist:
-                        return JsonResponse({"message":"user doesn't exists!","status":400},status=400)
-                
-                elif user_type.upper()=='SUBADMIN':
-                    try:
-                        user=SubAdmin.objects.get(email=email)
-                    except SubAdmin.DoesNotExist:
-                        return JsonResponse({"message":"user doesn't exists!","status":400},status=400)
-                
-                elif user_type.upper()=='PARKINGOWNER':
-                    try:
-                        user=ParkingOwner.objects.get(email=email)
-                    except ParkingOwner.DoesNotExist:
-                        return JsonResponse({"message":"user doesn't exists!","status":400},status=400)
-                
-                else:
-                    return JsonResponse({"message":"invalid user role!","status":400},status=400)
-                
-                user.password=make_password(new_password)
-                user.save()
-                
-                return JsonResponse({"message":"password is changed!","status":200},status=200)
-
-            elif email and new_password and confirm_new_password and user_type:
-                if user_type.upper()=='ADMIN':
-                    try:
-                        user=Admin.objects.get(email=email)
-                    except Admin.DoesNotExist:
-                        return JsonResponse({"message":"user doesn't exists!","status":400},status=400)
-                
-                elif user_type.upper()=='SUBADMIN':
-                    try:
-                        user=SubAdmin.objects.get(email=email)
-                    except SubAdmin.DoesNotExist:
-                        return JsonResponse({"message":"user doesn't exists!","status":400},status=400)
-                
-                elif user_type.upper()=='PARKINGOWNER':
-                    try:
-                        user=ParkingOwner.objects.get(email=email)
-                    except ParkingOwner.DoesNotExist:
-                        return JsonResponse({"message":"user doesn't exists!","status":400},status=400)
-                
-                else:
-                    return JsonResponse({"message":"invalid user role!","status":400},status=400)
-                
-                if not new_password==confirm_new_password:
-                    return JsonResponse({"message":"passwords are not matching!","status":400},status=400)
-                
-                OTPSender.send(
-                    to=email,
-                    user_id=email,
-                    name=user.name
-                )
-                return JsonResponse({"message":"otp sent to your email!","status":200},status=200)
-            
-            return JsonResponse({"message":"bad request!","status":400},status=400)
+        data = json.loads(request.body.decode('utf-8'))
+        email=data.get("email",None)
+        new_password=data.get("new_password",None)
+        confirm_new_password=data.get("confirm_new_password",None)
+        user_type=data.get('user_type',None)
+        otp=data.get("otp",None)
         
-        except Exception as e:
-            return JsonResponse({"message":str(e),"status":500},status=500)
+        message,status_code=reset_password(
+            email,
+            new_password,
+            user_type,
+            confirm_new_password,
+            otp
+        )
+        return JsonResponse(message,status=status_code)

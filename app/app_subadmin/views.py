@@ -28,8 +28,13 @@ class LoginView(View):
         data = json.loads(request.body.decode('utf-8'))
         email = data.get('email')
         password = data.get('password')
-        response=login(email,password)
-        return response
+        message,status_code=login(email,password)
+        if status_code==200:
+            response = JsonResponse({"message": "Login successful","status":200},status=200)
+            response.set_cookie('access_token', message['access_token'], httponly=True, secure=True)
+            response.set_cookie('refresh_token', message['refresh_token'], httponly=True, secure=True)
+            return response
+        return JsonResponse(message,status=status_code)
         
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(View):
@@ -55,11 +60,12 @@ class RegisterView(View):
         phone=StringBuilder(request.POST.get('phone')).normalize_spaces().trim_string().build()
         password=StringBuilder(request.POST.get('password')).normalize_spaces().trim_string().build()
         parking_areas=StringBuilder(request.POST.get('parking_areas')).normalize_spaces().trim_string().build()
-        role=Role.objects.get(role_name='SUBADMIN')
-        response=register(
-            admin_id,name,email,phone,password,parking_areas.split(","),role
+        stat,message,status_code=register(
+            admin_id,name,email,phone,password,parking_areas.split(",")
         )
-        return response
+        if stat:
+            return redirect("/sub-admin/login")
+        return JsonResponse(message,status=status_code)
 
 class Home(View):
 
