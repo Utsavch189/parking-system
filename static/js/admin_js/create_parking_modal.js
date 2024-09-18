@@ -128,10 +128,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 all_start_time.forEach(v=>{
                     if(v.value==="00:00"){
                         v.value=startTimeInput.value;
-                    }
-                    const _day=selected_days.filter(p=>p.day===v.getAttribute('day'));
-                    if(_day.length>0){
-                        _day[0]['open_time']=startTimeInput.value;
+                        const _day=selected_days.filter(p=>p.day===v.getAttribute('day'));
+                        if(_day.length>0){
+                            _day[0]['open_time']=startTimeInput.value;
+                        }
                     }
                 })
                 const _day=selected_days.filter(p=>p.day===v);

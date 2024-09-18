@@ -75,62 +75,54 @@ function isLastPage(totalRecords, pageSize, currentPage) {
     return currentPage === totalPages;
 }
 
-const next = (currentPage) => {
-    const pages=currentPage + 1;
-    return pages;
-}
+const next = (currentPage) => currentPage + 1;
 
-const prev = (currentPage) => {
-    if (currentPage === 1) {
-        return currentPage;
-    }
-    const pages= currentPage - 1;
-    return pages;
-}
+const prev = (currentPage) => (currentPage > 1 ? currentPage - 1 : currentPage);
 
-const paginate_btn_handel=(total_recordss,selected_pagination_numbers,pages)=>{
-    if (pages === 1 && isLastPage(total_recordss, selected_pagination_numbers, pages)) {
+const paginate_btn_handel = (totalRecords, selectedPaginationNumbers, currentPage) => {
+    const isFirstPage = currentPage === 1;
+    const lastPage = isLastPage(totalRecords, selectedPaginationNumbers, currentPage);
+
+    if(totalRecords===0 && page===1){
         prev_btns.classList.add('bg-gray-400');
         prev_btns.setAttribute('disabled', true);
         next_btns.classList.add('bg-gray-400');
         next_btns.setAttribute('disabled', true);
+        return;
     }
 
-    else if(isLastPage(total_recordss,selected_pagination_numbers,pages)){
-        next_btns.classList.add('bg-gray-400');
-        next_btns.setAttribute('disabled', true);
-        prev_btns.classList.remove('bg-gray-400');
-        prev_btns.removeAttribute('disabled');
-        page=1;
-    }
-    
-    else if(pages===1 && !isLastPage(total_recordss, selected_pagination_numbers, pages)){
+    // Handle Previous Button
+    if (isFirstPage) {
         prev_btns.classList.add('bg-gray-400');
         prev_btns.setAttribute('disabled', true);
-        next_btns.classList.remove('bg-gray-400');
-        next_btns.removeAttribute('disabled');
-    }
-    else{
-        next_btns.classList.remove('bg-gray-400');
-        next_btns.removeAttribute('disabled');
+    } else {
         prev_btns.classList.remove('bg-gray-400');
         prev_btns.removeAttribute('disabled');
+    }
+
+    // Handle Next Button
+    if (lastPage) {
+        next_btns.classList.add('bg-gray-400');
+        next_btns.setAttribute('disabled', true);
+    } else {
+        next_btns.classList.remove('bg-gray-400');
+        next_btns.removeAttribute('disabled');
     }
 }
 
-next_btns.addEventListener("click",()=>{
-    const pages=next(page);
-    page=pages;
-    paginate_btn_handel(total_records,selected_pagination_number,pages);
+next_btns.addEventListener("click", () => {
+    const pages = next(page);
+    page = pages;
+    paginate_btn_handel(total_records, selected_pagination_number, pages);
     get_parking_attendants(pages,selected_pagination_number);
-})
+});
 
-prev_btns.addEventListener("click",()=>{
-    const pages=prev(page);
-    page=pages;
-    paginate_btn_handel(total_records,selected_pagination_number,pages);
+prev_btns.addEventListener("click", () => {
+    const pages = prev(page);
+    page = pages;
+    paginate_btn_handel(total_records, selected_pagination_number, pages);
     get_parking_attendants(pages,selected_pagination_number);
-})
+});
 
 function verification_toggler(subadmin_id,input_id){
     const inp=document.getElementById(input_id);
@@ -257,6 +249,6 @@ const get_parking_attendants=(page,page_size)=>{
             render_table_row(v.uid,v.name,v.phone,v.email,v.associate_areas,v.created_at,v.is_verified,v.is_suspended)
         })
         total_records=data.total_records;
-        paginate_btn_handel(data.total_records,selected_pagination_number,page);
+        paginate_btn_handel(total_records,selected_pagination_number,page);
     })
 }

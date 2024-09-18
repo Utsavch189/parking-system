@@ -33,32 +33,43 @@ class LoginView(View):
 @method_decorator(csrf_exempt, name='dispatch')
 class Register(View):
 
-    def get(self,request,parking_area_id,admin_id):
-        enc_parking_area_id=parking_area_id
-        enc_admin_id=admin_id
-        try:
-          parking_area_id=decrypt(parking_area_id)
-          admin_id=decrypt(admin_id)
-        except Exception as e:
-            return HttpResponse("Not Found")
-        admin=Admin.objects.get(uid=admin_id)
-        parking_area=ParkingArea.objects.get(uid=parking_area_id)
-        return render(request,'parkingowner/register.html',context={"admin":admin,"area":parking_area,"enc_parking_area_id":enc_parking_area_id,"enc_admin_id":enc_admin_id})
+    def get(self,request):
+        if request._user:
+            return redirect('/parking-owner')
+        return render(request,'parkingowner/register.html')
 
 
-    def post(self,request,parking_area_id,admin_id):
-        try:
-          parking_area_id=decrypt(parking_area_id)
-          admin_id=decrypt(admin_id)
-        except Exception as e:
-            return HttpResponse("Not Found")
+    def post(self,request):
         name=StringBuilder(request.POST.get('name')).normalize_spaces().trim_string().build()
         email=StringBuilder(request.POST.get('email')).normalize_spaces().trim_string().build()
         phone=StringBuilder(request.POST.get('phone')).normalize_spaces().trim_string().build()
         password=StringBuilder(request.POST.get('password')).normalize_spaces().trim_string().build()
+        pincode=StringBuilder(request.POST.get('pincode')).normalize_spaces().trim_string().build()
+        country=StringBuilder(request.POST.get('countrycode')).normalize_spaces().trim_string().build()
         stat,message,status_code=register(
-            admin_id,name,email,phone,password
+            name,email,phone,password,pincode,country
         )
         if stat:
-            return redirect("/parking-owner/login")
+            return redirect('/parking-owner/login')
         return JsonResponse(message,status=status_code)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class Home(View):
+
+    @login_required(login_url="/parking-owner/login")
+    def get(self,request):
+        if request.GET.get('area_id') and request.GET.get('admin_id'):
+            area_id=decrypt(request.GET.get('area_id'))
+            admin_id=decrypt(request.GET.get('admin_id'))
+            try:
+                response=render(request,'parkingowner/home.html')
+                response.set_cookie('current_area_id',area_id)
+                response.set_cookie('current_admin_id',admin_id)
+                return response
+            except Exception as e:
+                raise Exception(str(e))
+        
+        response=render(request,'parkingowner/home.html')
+        response.delete_cookie('current_area_id')
+        response.delete_cookie('current_admin_id')
+        return response

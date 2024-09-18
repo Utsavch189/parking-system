@@ -7,5 +7,6 @@ urlpatterns=[
     path('super-admin/',include('app.app_superadmin.urls')),
     path('sub-admin/',include('app.app_subadmin.urls')),
     path('parking-owner/',include('app.app_parkingowner.urls')),
+    path('raise-ticket',include('app.app_raise_ticket.urls')),
     # path('users/',include('app.app_parkingowner.urls'))
 ]

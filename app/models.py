@@ -201,10 +201,12 @@ class FacilityChargesForArea(models.Model):
 
 class ParkingSlot(models.Model):
     uid=models.CharField(max_length=100,unique=True)
-    slot_no=models.CharField(max_length=10,unique=True,default="")
-    address=models.CharField(max_length=255)
+    name=models.CharField(max_length=100,null=True,blank=True)
+    slot_no=models.CharField(max_length=10,default="")
+    address=models.CharField(max_length=255,default="")
+    direction_guidance=models.CharField(max_length=255,default="")
     slot_creator=models.ForeignKey(ParkingOwner,on_delete=models.CASCADE,related_name='slot_creator')
-    slot_booking_qr=models.TextField(null=True,blank=True)
+    slot_booking_qr=models.TextField(default="")
     is_active=models.BooleanField(default=True)
     is_suspended=models.BooleanField(default=False)
     created_at=models.DateTimeField(default=datetime.now())

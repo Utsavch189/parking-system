@@ -35,12 +35,12 @@ def create_parking_area(user_id:str,area_name:str="",facilities:list[dict]=[],se
             # create area
             parking_area_id=generate_unique_id()
 
-            # parking_owner_register_qr making
-            parking_owner_register_qr_filename=f"{user_id}_{generate_unique_id()+str(random.randint(1111,9999))}"
-            parking_owner_register_qr_dest=f'parking_system/parkingowner_registerqr/{parking_owner_register_qr_filename}'
-            parking_owner_register_qr_url=f"{BASE_URL}/parking-owner/register/{encrypt(parking_area_id)}&{encrypt(user_id)}"
-            parking_owner_register_qr=get_qr(parking_owner_register_qr_url)
-            parking_owner_register_res=CDN.upload(source=parking_owner_register_qr,destination=parking_owner_register_qr_dest)
+            # parkingowner_slotassign_qr making
+            parkingowner_slotassign_qr_filename=f"{user_id}_{generate_unique_id()+str(random.randint(1111,9999))}"
+            parkingowner_slotassign_qr_dest=f'parking_system/parkingowner_areaassing_qr/{parkingowner_slotassign_qr_filename}'
+            parkingowner_slotassign_qr_url=f"{BASE_URL}/parking-owner/?area_id={encrypt(parking_area_id)}&admin_id={encrypt(user_id)}"
+            parkingowner_slotassign_qr=get_qr(parkingowner_slotassign_qr_url)
+            parkingowner_slotassign_res=CDN.upload(source=parkingowner_slotassign_qr,destination=parkingowner_slotassign_qr_dest)
 
             # searchingslots_qr making
             searchingslots_qr_filename=f"{user_id}_{generate_unique_id()+str(random.randint(1111,9999))}"
@@ -53,21 +53,21 @@ def create_parking_area(user_id:str,area_name:str="",facilities:list[dict]=[],se
                 parking_area=ParkingArea(
                     uid=parking_area_id,
                     area_name=area_name,
-                    parking_owner_register_qr=parking_owner_register_res.get('secure_url'),
+                    parking_owner_register_qr=parkingowner_slotassign_res.get('secure_url'),
                     searchingslots_qr=searchingslots_res.get('secure_url'),
                     admin=admin
                 )
                 parking_area.save()
 
                 parking_owner_register_qr_cdnmanager=CdnFileManager(
-                    filename=parking_owner_register_qr_filename,
+                    filename=parkingowner_slotassign_qr_filename,
                     query_id=parking_area_id,
-                    url=parking_owner_register_res.get('secure_url'),
-                    public_id=parking_owner_register_res.get('public_id'),
-                    asset_id=parking_owner_register_res.get('asset_id'),
-                    resource_type=parking_owner_register_res.get('resource_type'),
-                    folder=parking_owner_register_res.get('folder'),
-                    types=parking_owner_register_res.get('type')
+                    url=parkingowner_slotassign_res.get('secure_url'),
+                    public_id=parkingowner_slotassign_res.get('public_id'),
+                    asset_id=parkingowner_slotassign_res.get('asset_id'),
+                    resource_type=parkingowner_slotassign_res.get('resource_type'),
+                    folder=parkingowner_slotassign_res.get('folder'),
+                    types=parkingowner_slotassign_res.get('type')
                 )
                 parking_owner_register_qr_cdnmanager.save()
 
@@ -77,7 +77,7 @@ def create_parking_area(user_id:str,area_name:str="",facilities:list[dict]=[],se
                     url=searchingslots_res.get('secure_url'),
                     public_id=searchingslots_res.get('public_id'),
                     asset_id=searchingslots_res.get('asset_id'),
-                    resource_type=parking_owner_register_res.get('resource_type'),
+                    resource_type=searchingslots_res.get('resource_type'),
                     folder=searchingslots_res.get('folder'),
                     types=searchingslots_res.get('type')
                 )

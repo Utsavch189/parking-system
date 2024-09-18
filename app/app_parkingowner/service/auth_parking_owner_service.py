@@ -1,7 +1,7 @@
 from typing import Tuple
 from utils.jwt_builder import JwtBuilder
 import json
-from app.models import Admin,ParkingOwner,Role
+from app.models import Admin,ParkingOwner,Role,CountryCode
 from utils.id_generator import generate_unique_id
 from utils.emails import SendMail
 from multiprocessing import Process
@@ -35,27 +35,28 @@ def login(email:str,password:str)->Tuple[dict,int]:
         return {"message": "Something is wrong","status":500}, 500
 
 
-def register(admin_id:str,name:str,email:str,phone:str,password:str)->Tuple[bool,dict,int]:
+def register(name:str,email:str,phone:str,password:str,pincode:str,country:str)->Tuple[bool,dict,int]:
     try:
         uid=generate_unique_id()
-        admin=Admin.objects.get(uid=admin_id)
         role=Role.objects.get(role_name='PARKINOWNER')
+        country_code=CountryCode.objects.get(country=country).country_code
         parking_owner=ParkingOwner(
             uid=uid,
             name=name,
             email=email,
             phone=phone,
             password=password,
-            pincode=admin.pincode,
-            country_code=admin.country_code,
-            role=role
+            pincode=pincode,
+            country_code=country_code,
+            role=role,
+            is_verified=True
         )
         parking_owner.save()
         p=Process(
             target=SendMail.send_email,
-            args=('Registered Successfully!',f'Hello {name} Your Account has been created as {role.ui_name}.\nYour UserId is {email} and Password is {password}.\nYour Account will be verified shortly and we will inform you!',email)
+            args=('Registered Successfully!',f'Hello {name} Your Account has been created as {role.ui_name}.\nYour UserId is {email} and Password is {password}.',email)
         )
         p.start()
-        return True,{},201
+        return True,{"message":"account is created!","status":201},201
     except Exception as e:
         return False,{"message":"something is wrong!","status":500},500

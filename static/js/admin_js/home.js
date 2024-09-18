@@ -8,7 +8,7 @@ const edit_parking_modal=document.getElementById("edit-parking-modal");
 const qr_modal=document.getElementById('qr-modal');
 const modal_btn_container = document.getElementById("modal-btn-container");
 
-const pagination_numbers = [20, 50, 100, 200]
+const pagination_numbers = [2,20, 50, 100, 200]
 let selected_pagination_number;
 let page = 1;
 let view_facilities_modal_btn;
@@ -129,62 +129,54 @@ function isLastPage(totalRecords, pageSize, currentPage) {
     return currentPage === totalPages;
 }
 
-const next = (currentPage) => {
-    const pages=currentPage + 1;
-    return pages;
-}
+const next = (currentPage) => currentPage + 1;
 
-const prev = (currentPage) => {
-    if (currentPage === 1) {
-        return currentPage;
-    }
-    const pages= currentPage - 1;
-    return pages;
-}
+const prev = (currentPage) => (currentPage > 1 ? currentPage - 1 : currentPage);
 
-const paginate_btn_handel=(total_recordss,selected_pagination_numbers,pages)=>{
-    if (pages === 1 && isLastPage(total_recordss, selected_pagination_numbers, pages)) {
+const paginate_btn_handel = (totalRecords, selectedPaginationNumbers, currentPage) => {
+    const isFirstPage = currentPage === 1;
+    const lastPage = isLastPage(totalRecords, selectedPaginationNumbers, currentPage);
+
+    if(totalRecords===0 && page===1){
         prev_btns.classList.add('bg-gray-400');
         prev_btns.setAttribute('disabled', true);
         next_btns.classList.add('bg-gray-400');
         next_btns.setAttribute('disabled', true);
+        return;
     }
 
-    else if(isLastPage(total_recordss,selected_pagination_numbers,pages)){
-        next_btns.classList.add('bg-gray-400');
-        next_btns.setAttribute('disabled', true);
-        prev_btns.classList.remove('bg-gray-400');
-        prev_btns.removeAttribute('disabled');
-        page=1;
-    }
-    
-    else if(pages===1 && !isLastPage(total_recordss, selected_pagination_numbers, pages)){
+    // Handle Previous Button
+    if (isFirstPage) {
         prev_btns.classList.add('bg-gray-400');
         prev_btns.setAttribute('disabled', true);
-        next_btns.classList.remove('bg-gray-400');
-        next_btns.removeAttribute('disabled');
-    }
-    else{
-        next_btns.classList.remove('bg-gray-400');
-        next_btns.removeAttribute('disabled');
+    } else {
         prev_btns.classList.remove('bg-gray-400');
         prev_btns.removeAttribute('disabled');
+    }
+
+    // Handle Next Button
+    if (lastPage) {
+        next_btns.classList.add('bg-gray-400');
+        next_btns.setAttribute('disabled', true);
+    } else {
+        next_btns.classList.remove('bg-gray-400');
+        next_btns.removeAttribute('disabled');
     }
 }
 
-next_btns.addEventListener("click",()=>{
-    const pages=next(page);
-    page=pages;
-    paginate_btn_handel(total_records,selected_pagination_number,pages);
-    get_data(pages,selected_pagination_number);
-})
+next_btns.addEventListener("click", () => {
+    const pages = next(page);
+    page = pages;
+    paginate_btn_handel(total_records, selected_pagination_number, pages);
+    get_data(pages, selected_pagination_number);
+});
 
-prev_btns.addEventListener("click",()=>{
-    const pages=prev(page);
-    page=pages;
-    paginate_btn_handel(total_records,selected_pagination_number,pages);
-    get_data(pages,selected_pagination_number);
-})
+prev_btns.addEventListener("click", () => {
+    const pages = prev(page);
+    page = pages;
+    paginate_btn_handel(total_records, selected_pagination_number, pages);
+    get_data(pages, selected_pagination_number);
+});
 
 const view_facilities = (facilitiess,area_name) => {
     if (view_facilities_modal && view_facilities_modal_btn) {
@@ -437,12 +429,23 @@ function update_area_name(){
         });
         return;
     }
+    let btnText=update_area_name_btn.textContent;
+    update_area_name_btn.disabled=true;
+    update_area_name_btn.textContent='Loading...';
+
     fetch('/admins/parking-area', {
         method: "PUT",
         body: JSON.stringify({ "area_name": updated_area_name,"area_id":area_id })
     })
     .then(res => res.json())
-    .then(data => {})
+    .then(data => {
+        update_area_name_btn.disabled=false;
+        update_area_name_btn.textContent=btnText;
+    })
+    .catch(err=>{
+        update_area_name_btn.disabled=false;
+        update_area_name_btn.textContent=btnText;
+    })
 }
 
 function update_area_facility(){
@@ -497,12 +500,24 @@ function update_area_facility(){
     if(f){
         return;
     }
+
+    let btnText=update_area_facility_btn.textContent;
+    update_area_facility_btn.disabled=true;
+    update_area_facility_btn.textContent='Loading...';
+
     fetch('/admins/parking-area', {
         method: "PUT",
         body: JSON.stringify({ "facilities": selected_facilities_for_edit,"area_id":area_id })
     })
     .then(res => res.json())
-    .then(data => {})
+    .then(data => {
+        update_area_facility_btn.textContent=btnText;
+        update_area_facility_btn.disabled=false;
+    })
+    .catch(err=>{
+        update_area_facility_btn.textContent=btnText;
+        update_area_facility_btn.disabled=false;
+    })
 }
 
 function update_area_timings(){
@@ -545,12 +560,24 @@ function update_area_timings(){
     if(f){
         return;
     }
+    
+    let btnText=update_area_timings_btn.textContent;
+    update_area_timings_btn.disabled=true;
+    update_area_timings_btn.textContent='Loading...';
+
     fetch('/admins/parking-area', {
         method: "PUT",
         body: JSON.stringify({ "selected_days": _selected_days,"area_id":area_id })
     })
     .then(res => res.json())
-    .then(data => {})
+    .then(data => {
+        update_area_timings_btn.disabled=false;
+        update_area_timings_btn.textContent=btnText;
+    })
+    .catch(err=>{
+        update_area_timings_btn.disabled=false;
+        update_area_timings_btn.textContent=btnText;
+    })
 }
 
 function edit_area(facilitiess,timings,area_name,id){
@@ -951,7 +978,7 @@ const get_data = (page, page_size) => {
                     )
                 })
                 total_records=data.total_records;
-                paginate_btn_handel(data.total_records,selected_pagination_number,page);
+                paginate_btn_handel(total_records,selected_pagination_number,page);
             }
             
         })

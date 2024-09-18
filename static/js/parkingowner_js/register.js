@@ -3,6 +3,7 @@ const email_inp=document.getElementById('email');
 const phone_inp=document.getElementById('phone');
 const password_inp=document.getElementById('password');
 const confirm_password_inp=document.getElementById('confirm-password');
+const pincode_inp=document.getElementById('pincode');
 
 const password_error=document.getElementById('password-error');
 const confirm_password_error=document.getElementById('confirm-password-error');
@@ -94,6 +95,20 @@ function validateForm() {
         });
         return false;
     }
+    if(isNaN(pincode_inp.value)){
+        $.toast({
+            text: "Pincode should contain only numbers!",
+            showHideTransition: 'slide',
+            bgColor: 'red',
+            textColor: 'white',
+            allowToastClose: true,
+            hideAfter: 1400,
+            stack: 5,
+            textAlign: 'left',
+            position: 'top-left'
+        });
+        return false;
+    }
     if(isNaN(phone_inp.value) || phone_inp.value.length<10 || phone_inp.value.length>10){
         $.toast({
             text: "Phone number invalid!",
@@ -110,3 +125,31 @@ function validateForm() {
     }
     return true;
 }
+
+$(document).ready(function() {
+    $('#countrycode').select2({
+        placeholder: "Select a country",
+        ajax: {
+            url: '/admins/search-country',  // URL to your search view
+            dataType: 'json',
+            delay: 250,  // Delay for debounce
+            data: function (params) {
+                return {
+                    search: params.term  // Pass the search term to the server
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data.results, function(country) {
+                        return {
+                            id: country.country,  // Unique ID for each country
+                            text: country.country,  // Text to display in the dropdown
+                        }
+                    })
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1  // Start searching after one character input
+    });
+});
