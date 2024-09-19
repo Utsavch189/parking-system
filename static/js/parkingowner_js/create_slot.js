@@ -179,7 +179,6 @@ document.addEventListener("DOMContentLoaded",()=>{
                 displayed_facilities.push(value);
                 facilities.innerHTML += get_options_child(value.uid, value.facility_value)
             })
-            console.log(JSON.parse(data.data))
         })
 })
 
@@ -311,4 +310,24 @@ function create(){
     let btnText=create_btn.textContent;
     create_btn.disabled=true;
     create_btn.textContent='Loading...';
+
+    fetch('/parking-owner/parking-slot',{
+        method:"POST",
+        body:JSON.stringify({
+            address:address,
+            direction_guidance:direction_address,
+            facilities:selected_facilities,
+            timings:selected_days
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        setTimeout(() => {
+            window.location.reload();
+        }, 300)
+    })
+    .finally(()=>{
+        create_btn.disabled=false;
+        create_btn.textContent=btnText;
+    })
 }

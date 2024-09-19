@@ -1,1 +1,2 @@
 from .auth_parking_owner_service import register,login
+from .parking_slot_service import create_slot,get_slots

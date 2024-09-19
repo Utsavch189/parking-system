@@ -5,11 +5,10 @@ from utils.decorators.login_requires import login_required
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .service import login,register
+from .service import login,register,create_slot,get_slots
 from utils.encrypt import decrypt
 from app.models import Admin,ParkingArea,Role
 from utils.string import StringBuilder
-
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
 
@@ -73,3 +72,37 @@ class Home(View):
         response.delete_cookie('current_area_id')
         response.delete_cookie('current_admin_id')
         return response
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SlotView(View):
+
+    @login_required(login_url="/parking-owner/login",json_response=True)
+    def get(self,request):
+        user_id=request._user.get('user_id')
+
+        if request.GET.get('page') and request.GET.get('page-size'):
+            page=request.GET.get('page')
+            page_size=request.GET.get('page-size')
+            message,status=get_slots(page,page_size,user_id)
+            return JsonResponse(message,status=status)
+        
+        return JsonResponse({"message":"bad request","status":400},400)
+
+    @login_required(login_url="/parking-owner/login",json_response=True)
+    def post(self,request):
+        data = json.loads(request.body.decode('utf-8'))
+        user_id=request._user.get('user_id')
+
+        address=StringBuilder(data.get('address')).normalize_spaces().build()
+        direction_guidance=StringBuilder(data.get('direction_guidance')).normalize_spaces().build()
+        facilities=data.get('facilities')
+        timings=data.get('timings')
+
+        message,status=create_slot(
+            user_id,
+            address,
+            direction_guidance,
+            facilities,
+            timings
+        )
+        return JsonResponse(message,status=status)
