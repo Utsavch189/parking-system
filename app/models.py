@@ -49,7 +49,7 @@ class SuperAdmin(models.Model):
     def __str__(self) -> str:
         return self.name
 
-class Admin(models.Model):
+class AreaAdminProfile(models.Model):
     uid=models.CharField(max_length=100,unique=True)
     name=models.CharField(max_length=100)
     email=models.EmailField(max_length=100,unique=True)
@@ -58,7 +58,7 @@ class Admin(models.Model):
     pincode=models.IntegerField()
     country_code=models.CharField(max_length=30)
     role=models.ForeignKey(Role,on_delete=models.SET_NULL,related_name='admin_role',null=True)
-    subadmin_register_qr=models.TextField(null=True,blank=True)
+    secret_code=models.CharField(max_length=20,null=True,blank=True)
     is_active=models.BooleanField(default=True)
     is_verified=models.BooleanField(default=False)
     is_suspended=models.BooleanField(default=False)
@@ -72,7 +72,7 @@ class Admin(models.Model):
         self.email=self.email.lower()
         if not self.id:
             self.password=make_password(self.password)
-        super(Admin, self).save(*args, **kwargs)
+        super(AreaAdminProfile, self).save(*args, **kwargs)
     
     def is_correct_password(self,password:str):
         return check_password(password,self.password)
@@ -88,7 +88,7 @@ class SubAdmin(models.Model):
     password=models.TextField()
     pincode=models.IntegerField(default=0)
     country_code=models.CharField(max_length=30,default="")
-    associate_admin=models.ForeignKey(Admin,on_delete=models.SET_NULL,related_name='sub_admin_associate_admin',null=True)
+    associate_admin=models.ForeignKey(AreaAdminProfile,on_delete=models.SET_NULL,related_name='sub_admin_associate_admin',null=True)
     role=models.ForeignKey(Role,on_delete=models.SET_NULL,related_name='subadmin_role',null=True)
     is_active=models.BooleanField(default=True)
     is_verified=models.BooleanField(default=False)
@@ -141,14 +141,19 @@ class ParkingOwner(models.Model):
     def __str__(self) -> str:
         return self.name
 
-class ParkingArea(models.Model):
+class AreaDetail(models.Model):
     uid=models.CharField(max_length=100,unique=True)
     area_name=models.CharField(max_length=100)
     parking_owner_register_qr=models.TextField(null=True,blank=True)
     searchingslots_qr=models.TextField(null=True,blank=True)
-    admin=models.ForeignKey(Admin,on_delete=models.CASCADE,related_name='area_under_admin')
+    pincode=models.IntegerField()
+    country_code=models.CharField(max_length=30)
+    area_unique_code=models.CharField(max_length=20,null=True,blank=True)
+    attendant_auth_required=models.BooleanField(default=False)
+    accompany_allowed=models.BooleanField(default=False)
     is_active=models.BooleanField(default=True)
     is_suspended=models.BooleanField(default=False)
+    last_updated_by=models.ForeignKey(AreaAdminProfile,on_delete=models.CASCADE,related_name='area_update_admin')
     created_at=models.DateTimeField(default=datetime.now())
 
     objects = ActiveManager()
@@ -156,11 +161,11 @@ class ParkingArea(models.Model):
     
     def __str__(self) -> str:
         return self.area_name
-
+# admin=models.ForeignKey(AreaAdminProfile,on_delete=models.CASCADE,related_name='area_under_admin')
 class SubAdminUnderParkingArea(models.Model):
     uid=models.CharField(max_length=100,unique=True)
     sub_admin=models.ForeignKey(SubAdmin,on_delete=models.CASCADE,related_name='subadmin')
-    admin=models.ForeignKey(Admin,on_delete=models.SET_NULL,related_name='subadmin_under_admin',null=True)
+    admin=models.ForeignKey(AreaAdminProfile,on_delete=models.SET_NULL,related_name='subadmin_under_admin',null=True)
     parking_area=models.ForeignKey(ParkingArea,on_delete=models.SET_NULL,related_name='subadmin_under_parking_area',null=True)
     assigned_at=models.DateTimeField(default=datetime.now())
     is_active=models.BooleanField(default=True)
@@ -194,7 +199,7 @@ class FacilityChargesForArea(models.Model):
     is_active=models.BooleanField(default=True)
     created_at=models.DateTimeField(default=datetime.now())
     updated_at=models.DateTimeField(default=None,null=True,blank=True)
-    last_updated_by=models.ForeignKey(Admin,on_delete=models.CASCADE,related_name='updated_facility_for_area_by',null=True,blank=True)
+    last_updated_by=models.ForeignKey(AreaAdminProfile,on_delete=models.CASCADE,related_name='updated_facility_for_area_by',null=True,blank=True)
 
     objects = ActiveManager()
     admin_objects = AdminManager() 
@@ -252,7 +257,7 @@ class SlotUnderParkingArea(models.Model):
     slot=models.ForeignKey(ParkingSlot,on_delete=models.CASCADE,related_name='slot_under_parking_area')
     assigned_at=models.DateTimeField(default=datetime.now())
     is_verified=models.BooleanField(default=False)
-    approved_by=models.ForeignKey(Admin,on_delete=models.SET_NULL,null=True,related_name='slot_approved_by')
+    approved_by=models.ForeignKey(AreaAdminProfile,on_delete=models.SET_NULL,null=True,related_name='slot_approved_by')
     is_active=models.BooleanField(default=True)
 
     objects = ActiveManager()
@@ -290,7 +295,7 @@ class ArrivalDepart(models.Model):
     actual_depart_time=models.DateTimeField(default=None)
     actual_charge=models.DecimalField(max_digits=10, decimal_places=2,default=0)
     collected_charge=models.DecimalField(max_digits=10, decimal_places=2,default=0)
-    released_by_admin=models.ForeignKey(Admin,on_delete=models.SET_NULL,null=True,related_name='releasedby_admin')
+    released_by_admin=models.ForeignKey(AreaAdminProfile,on_delete=models.SET_NULL,null=True,related_name='releasedby_admin')
     released_by_subadmin=models.ForeignKey(SubAdmin,on_delete=models.SET_NULL,null=True,related_name='releasedby_subadmin')
     released_by_parkingowner=models.ForeignKey(ParkingOwner,on_delete=models.SET_NULL,null=True,related_name='releasedby_parkingowner')
     is_active=models.BooleanField(default=True)
@@ -300,8 +305,8 @@ class ArrivalDepart(models.Model):
 
 class AdminChangingHistoryParkingAreas(models.Model):
     uid=models.CharField(max_length=100,unique=True)
-    prev_admin=models.ForeignKey(Admin,on_delete=models.CASCADE,related_name='prev_changed_admin')
-    current_admin=models.ForeignKey(Admin,on_delete=models.CASCADE,related_name='current_admin')
+    prev_admin=models.ForeignKey(AreaAdminProfile,on_delete=models.CASCADE,related_name='prev_changed_admin')
+    current_admin=models.ForeignKey(AreaAdminProfile,on_delete=models.CASCADE,related_name='current_admin')
     parking_area=models.ForeignKey(ParkingArea,on_delete=models.CASCADE,related_name='parkingarea_adminhistory')
     changed_by=models.ForeignKey(SuperAdmin,on_delete=models.CASCADE,related_name='changing_approval_by')
     assigned_at=models.DateTimeField(default=datetime.now())
